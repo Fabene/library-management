@@ -1,17 +1,22 @@
 openapi: 3.0.3
 info:
   title: Library API
-  version: 1.2.0
+  version: 1.3.0
   description: STD21101
 servers:
   - url: https://library.com
+security:
+  - OAuth2: []
 tags:
   - name: Books
   - name: Authors
+  - name: Visitors
 
 paths:
   /books:
     get:
+      security:
+        - OAuth2: []
       tags:
         - "Books"
       summary: Get all books
@@ -49,6 +54,8 @@ paths:
         500:
           $ref: '#/components/responses/500'
     put:
+      security:
+        - OAuth2: [add:authors, borrow:books, return:books, add:books]
       tags:
         - "Books"
       summary: Create or update a list of books
@@ -71,6 +78,8 @@ paths:
           $ref: '#/components/responses/500'
   /books/{bookId}/authors/{authorId}:
     put:
+      security:
+        - OAuth2: [add:authors, borrow:books, return:books, add:books]
       tags:
         - "Books"
       summary: Update a Book's Author By Id
@@ -98,6 +107,8 @@ paths:
               
   /books/authors:
     put:
+      security:
+        - OAuth2: [add:authors, borrow:books, return:books, add:books]
       tags:
         - "Books" 
       summary: Update Book Authors
@@ -110,7 +121,6 @@ paths:
               type: array
               items:
                 $ref: "#/components/schemas/UpdateBookAuthor"
-
       responses:
         200:
           $ref: '#/components/responses/200Books'
@@ -122,6 +132,8 @@ paths:
           $ref: '#/components/responses/500'
   /books/import:
     post:
+      security:
+        - OAuth2: [add:authors, borrow:books, return:books, add:books]
       tags:
         - "Books"
       summary: Import Books From Excel or JSON
@@ -144,9 +156,46 @@ paths:
           $ref: '#/components/responses/403'
         500:
           $ref: '#/components/responses/500'
-        
+  /books/borrowed:
+    get:
+      security:
+        - OAuth2: [add:authors, borrow:books, return:books, add:books]
+      tags:
+        - "Books"
+      summary: Get Borrowed Books
+      operationId: getBorrowedBooks
+      responses:
+        200:
+          $ref: '#/components/responses/200Books'
+        400:
+          $ref: '#/components/responses/400'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+  /books/available:
+    get: 
+      security:
+        - OAuth2: []
+      tags:
+        - "Books"   
+      summary: Get Available Books
+      operationId: getAvailableBooks
+      responses:
+        200:
+          $ref: '#/components/responses/200Books'
+        400:
+          $ref: '#/components/responses/400'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+
+    
   /authors:
     get:
+      security:
+        - OAuth2: []
       tags:
         - "Authors"
       summary: Get all authors
@@ -169,6 +218,8 @@ paths:
         500:
           $ref: '#/components/responses/500'
     put:
+      security:
+        - OAuth2: [add:authors, borrow:books, return:books, add:books]
       tags:
         - "Authors"
       summary: Create or update a list of authors
@@ -191,6 +242,8 @@ paths:
           $ref: '#/components/responses/500'
   /authors/{aId}:
     delete:
+      security:
+        - OAuth2: [add:authors, borrow:books, return:books, add:books]
       tags:
         - "Authors"
       summary: Delete an author
@@ -213,6 +266,8 @@ paths:
           $ref: '#/components/responses/500'
   /authors/page/{page}/size/{size}:
     get:
+      security:
+        - OAuth2: [add:authors, borrow:books, return:books, add:books]
       tags:
           - "Authors"
       parameters:
@@ -228,6 +283,8 @@ paths:
           $ref: '#/components/responses/500'
   /authors/import:
     post:
+      security:
+        -  OAuth2: [add:authors, borrow:books, return:books, add:books]
       tags:
         - "Authors"
       summary: Import Authors From Excel or JSON
@@ -250,6 +307,132 @@ paths:
           $ref: '#/components/responses/403'
         500:
           $ref: '#/components/responses/500'
+  /visitors:
+    get:
+      tags:
+        - "Visitors"
+      summary: Get All Visitors
+      operationId: getVisitors
+      parameters:
+        - $ref: '#/components/parameters/queryPagination'
+      responses:
+        200:
+          $ref: '#/components/responses/200Visitors'
+        400:
+          $ref: '#/components/responses/400'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+    put:
+      tags:
+        - "Visitors"
+      summary: Create or Update a list of Visitors 
+      operationId: crupdateVisitors
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/Author"
+      responses:
+        200:
+          $ref: '#/components/responses/200Visitors'
+        400:
+          $ref: '#/components/responses/400'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+  /visitors/{visitorId}/borrowed:
+    put:
+      tags:
+        - "Visitors"
+      summary: Borrow a Book
+      operationId: borrowBook
+      parameters:
+        - name: visitorId
+          in: path
+          schema: 
+            type: string
+          required: true
+        - name: bookId
+          in: query
+          schema: 
+            type: string
+          required: true
+      responses:
+        200:
+          $ref: '#/components/responses/200Visitors'
+        400:
+          $ref: '#/components/responses/400'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+  /visitors/{visitorId}/returned:
+    put:
+      tags:
+        - "Visitors"
+      summary: Return a Book
+      operationId: returnBook
+      parameters:
+        - name: visitorId
+          in: path
+          schema: 
+            type: string
+          required: true
+        - name: bookId
+          in: query
+          schema: 
+            type: string
+          required: true
+      responses:
+        200:
+          $ref: '#/components/responses/200Visitors'
+        400:
+          $ref: '#/components/responses/400'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+  /visitors/{visitorId}/activities:
+    get:
+      tags:
+        - "Visitors"
+      summary: Get Visitor Activities within a certain period
+      operationId: getVisitorActivities
+      parameters:
+        - name: visitorId
+          in: path
+          schema:
+            type: string
+          required: true
+        - name: startDate
+          in: query
+          description: start date of the period
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: end date of the period
+          required: true
+          schema: 
+            type: string
+            format: date
+      responses:
+        200:
+          $ref: '#/components/responses/200VisitorActivities'
+        400:
+          $ref: '#/components/responses/400'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+
                  
 components:
   schemas:
@@ -293,6 +476,8 @@ components:
         author:
           $ref: "#/components/schemas/Author"
           type: string
+        isBorrowed:
+          type: boolean
     UpdateBookAuthor:
       type: object
       properties:
@@ -353,6 +538,34 @@ components:
       oneOf:
         - $ref: "#/components/schemas/ImportBookExcel"
         - $ref: "#/components/schemas/ImportBookJSON"
+    Visitors:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        reference:
+          type: string
+    VisitorActivity:
+      type: object
+      properties:
+        visitorId:
+          type: string
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        borrowedBooks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Book'
+        returnedBooks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Book'
 
   responses:
     200Books:
@@ -371,6 +584,22 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/Author'
+    200Visitors:
+      description: Successfull Operation
+      content:
+        application/json:
+          schema: 
+            type: array
+            items:
+              $ref: '#/components/schemas/Visitors'
+    200VisitorActivities:
+      description: Successfull Operation
+      content:
+        application/json:
+          schema: 
+            type: array
+            items: 
+              $ref: '#/components/schemas/VisitorActivity'
     400:
       description: Bad Request
       content:
@@ -418,4 +647,18 @@ components:
           pageSize:
             type: integer
             default: 50
-      
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://library.com/oauth/authorize
+          tokenUrl: https://library.com/oauth/token
+          scopes:
+            public: public access
+            read:books: read a book
+            read:authors: read an author
+            borrow:books: borrow a book
+            return:books: return a book
+            add:authors: add an author
+            add:books: add a book
